@@ -1,59 +1,91 @@
 import os
 from flask import Flask, render_template
+from db import get_connection
 
 app = Flask(__name__)
 
+# ---------------- Dynamic Pages ----------------
+def get_posts_by_category(category):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM posts WHERE category=%s ORDER BY created_at DESC", (category,))
+            posts = cursor.fetchall()
+    finally:
+        conn.close()
+    return posts
+
 @app.route("/")
 def home():
-    return render_template("home.html")
+    # Show latest posts from all categories
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM posts ORDER BY created_at DESC LIMIT 5")
+            posts = cursor.fetchall()
+    finally:
+        conn.close()
+    return render_template("home.html", posts=posts)
 
 @app.route("/news")
 def news():
-    return render_template("news.html")
+    posts = get_posts_by_category("news")
+    return render_template("news.html", posts=posts)
 
 @app.route("/sport")
 def sport():
-    return render_template("sport.html")
+    posts = get_posts_by_category("sport")
+    return render_template("sport.html", posts=posts)
 
 @app.route("/editorial")
 def editorial():
-    return render_template("editorial.html")
+    posts = get_posts_by_category("editorial")
+    return render_template("editorial.html", posts=posts)
 
 @app.route("/entertainment")
 def entertainment():
-    return render_template("entertainment.html")
+    posts = get_posts_by_category("entertainment")
+    return render_template("entertainment.html", posts=posts)
 
 @app.route("/media")
 def media():
-    return render_template("media.html")
+    posts = get_posts_by_category("media")
+    return render_template("media.html", posts=posts)
 
 @app.route("/features")
 def features():
-    return render_template("features.html")
+    posts = get_posts_by_category("features")
+    return render_template("features.html", posts=posts)
 
 @app.route("/photos")
 def photos():
-    return render_template("photos.html")
+    posts = get_posts_by_category("photos")
+    return render_template("photos.html", posts=posts)
 
 @app.route("/lifestyle")
 def lifestyle():
-    return render_template("lifestyle.html")
+    posts = get_posts_by_category("lifestyle")
+    return render_template("lifestyle.html", posts=posts)
 
 @app.route("/jobs")
 def jobs():
-    return render_template("jobs.html")
+    posts = get_posts_by_category("jobs")
+    return render_template("jobs.html", posts=posts)
 
 @app.route("/education")
 def education():
-    return render_template("education.html")
-
-@app.route("/about")
-def about():
-    return render_template("about.html")
+    posts = get_posts_by_category("education")
+    return render_template("education.html", posts=posts)
 
 @app.route("/events")
 def events():
-    return render_template("events.html")
+    posts = get_posts_by_category("events")
+    return render_template("events.html", posts=posts)
+
+# ---------------- Static Pages ----------------
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 @app.route("/membership")
 def membership():
@@ -64,4 +96,6 @@ def contact():
     return render_template("contact.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(host="0.0.0.0",
+            port=int(os.environ.get("PORT", 5000)),
+            debug=True)

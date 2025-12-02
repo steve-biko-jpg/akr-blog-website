@@ -1,17 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Sports Updates</h1>
-<p>Football, rugby & athletics updates for Kenyans in Rwanda.</p>
+<h1 class="mb-4">Sport</h1>
+
+{% set has_posts = false %}
 <div class="row">
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <img src="https://via.placeholder.com/300x150" class="card-img-top" alt="Sport 1">
-      <div class="card-body">
-        <h5 class="card-title">Match Highlight 1</h5>
-        <p class="card-text">Details about the sports match or event.</p>
-      </div>
+    {% for post in posts %}
+    {% if post.category == 'sport' %}
+    {% set has_posts = true %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="{{ post.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">{{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}</p>
+            </div>
+        </div>
     </div>
-  </div>
+    {% endif %}
+    {% endfor %}
 </div>
+
+{% if not has_posts %}
+<p>No posts in this category yet.</p>
+{% endif %}
 {% endblock %}

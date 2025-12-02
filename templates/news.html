@@ -1,26 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Latest News</h1>
-<p>Daily & weekly updates from the Kenyan community in Rwanda.</p>
+<h1 class="mb-4">News</h1>
+
+{% set has_posts = false %}
 <div class="row">
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <img src="https://via.placeholder.com/300x150" class="card-img-top" alt="News 1">
-      <div class="card-body">
-        <h5 class="card-title">News Headline 1</h5>
-        <p class="card-text">Short description of news item 1.</p>
-      </div>
+    {% for post in posts %}
+    {% if post.category == 'news' %}
+    {% set has_posts = true %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="{{ post.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">{{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}</p>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <img src="https://via.placeholder.com/300x150" class="card-img-top" alt="News 2">
-      <div class="card-body">
-        <h5 class="card-title">News Headline 2</h5>
-        <p class="card-text">Short description of news item 2.</p>
-      </div>
-    </div>
-  </div>
+    {% endif %}
+    {% endfor %}
 </div>
+
+{% if not has_posts %}
+<p>No posts in this category yet.</p>
+{% endif %}
 {% endblock %}

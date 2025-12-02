@@ -2,5 +2,20 @@
 
 {% block content %}
 <h1>Membership</h1>
-<p>Register as a member, see benefits, annual subscription, and member directory.</p>
+
+{% if posts %}
+    {% for post in posts %}
+        <div class="card mb-3">
+            {% if post.image_url %}
+                <img src="{{ post.image_url }}" class="card-img-top" alt="{{ post.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">{{ post.content }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No membership posts yet.</p>
+{% endif %}
 {% endblock %}

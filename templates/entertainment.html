@@ -1,6 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Entertainment</h1>
-<p>Kenyan artists in Rwanda, weekend events & cultural nights.</p>
+<h1 class="mb-4">Entertainment</h1>
+
+{% set has_posts = false %}
+<div class="row">
+    {% for post in posts %}
+    {% if post.category == 'entertainment' %}
+    {% set has_posts = true %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="{{ post.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">{{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% if not has_posts %}
+<p>No posts in this category yet.</p>
+{% endif %}
 {% endblock %}
