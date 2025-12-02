@@ -1,30 +1,48 @@
 import os
 from flask import Flask, render_template
-from db import get_connection
+import pymysql
 
 app = Flask(__name__)
 
+# ---------------- Database Connection ----------------
+def get_connection():
+    """Connect to the database using environment variables for deployment."""
+    return pymysql.connect(
+        host=os.environ.get("DB_HOST", "localhost"),
+        user=os.environ.get("DB_USER", "root"),
+        password=os.environ.get("DB_PASSWORD", "mimi"),
+        database=os.environ.get("DB_NAME", "akrblog"),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
 # ---------------- Dynamic Pages ----------------
 def get_posts_by_category(category):
-    conn = get_connection()
     try:
+        conn = get_connection()
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM posts WHERE category=%s ORDER BY created_at DESC", (category,))
             posts = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Database error: {e}")
+        posts = []
     finally:
-        conn.close()
+        if 'conn' in locals():
+            conn.close()
     return posts
 
 @app.route("/")
 def home():
-    # Show latest posts from all categories
-    conn = get_connection()
     try:
+        conn = get_connection()
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM posts ORDER BY created_at DESC LIMIT 5")
             posts = cursor.fetchall()
+    except pymysql.MySQLError as e:
+        print(f"Database error: {e}")
+        posts = []
     finally:
-        conn.close()
+        if 'conn' in locals():
+            conn.close()
     return render_template("home.html", posts=posts)
 
 @app.route("/news")
@@ -95,7 +113,10 @@ def membership():
 def contact():
     return render_template("contact.html")
 
+# ---------------- Run App ----------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",
-            port=int(os.environ.get("PORT", 5000)),
-            debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=True
+    )
