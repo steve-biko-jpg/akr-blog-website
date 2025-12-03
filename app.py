@@ -10,7 +10,7 @@ def get_connection():
     return pymysql.connect(
         host=os.environ.get("DB_HOST", "localhost"),
         user=os.environ.get("DB_USER", "root"),
-        password=os.environ.get("DB_PASSWORD", "mimi"),
+        password=os.environ.get("DB_PASSWORD", "STeVe!@a#kr5239"),
         database=os.environ.get("DB_NAME", "akrblog"),
         cursorclass=pymysql.cursors.DictCursor
     )
