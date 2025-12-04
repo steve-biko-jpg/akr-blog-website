@@ -16,7 +16,7 @@ def create_admin_table():
     # Insert default admin user (if not exists)
     cursor.execute("""
     INSERT INTO admins (username, password)
-    VALUES ('admin', SHA2('admin123', 256))
+    VALUES ('admin', SHA2('Steveadm!n5239', 256))
     ON DUPLICATE KEY UPDATE username=username;
     """)
 
