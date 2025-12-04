@@ -1,6 +1,8 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, session, url_for
 import pymysql
+from db import get_connection
+
 
 app = Flask(__name__)
 
@@ -112,6 +114,137 @@ def membership():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
+
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM posts WHERE id=%s", (post_id,))
+            post = cursor.fetchone()
+    finally:
+        conn.close()
+
+    return render_template("post.html", post=post)
+
+app.secret_key = "supersecretkey123"   # Change this later
+
+# ========== ADMIN LOGIN ==========
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM admins WHERE username=%s AND password=SHA2(%s, 256)",
+                (username, password)
+            )
+            admin = cursor.fetchone()
+        conn.close()
+
+        if admin:
+            session["admin"] = admin["username"]
+            return redirect("/admin")
+        else:
+            return render_template("admin_login.html", error="Invalid credentials")
+
+    return render_template("admin_login.html")
+
+
+# ========== ADMIN DASHBOARD ==========
+@app.route("/admin")
+def admin_dashboard():
+    if "admin" not in session:
+        return redirect("/admin/login")
+
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM posts ORDER BY created_at DESC")
+        posts = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_dashboard.html", posts=posts)
+
+
+# ========== ADD POST ==========
+@app.route("/admin/add", methods=["GET", "POST"])
+def admin_add():
+    if "admin" not in session:
+        return redirect("/admin/login")
+
+    if request.method == "POST":
+        title = request.form["title"]
+        content = request.form["content"]
+        category = request.form["category"]
+
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO posts (title, content, category) VALUES (%s, %s, %s)",
+                (title, content, category)
+            )
+            conn.commit()
+        conn.close()
+
+        return redirect("/admin")
+
+    return render_template("admin_add.html")
+
+
+# ========== EDIT POST ==========
+@app.route("/admin/edit/<int:id>", methods=["GET", "POST"])
+def admin_edit(id):
+    if "admin" not in session:
+        return redirect("/admin/login")
+
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM posts WHERE id=%s", (id,))
+        post = cursor.fetchone()
+
+    if request.method == "POST":
+        title = request.form["title"]
+        content = request.form["content"]
+        category = request.form["category"]
+
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE posts SET title=%s, content=%s, category=%s WHERE id=%s",
+                (title, content, category, id)
+            )
+            conn.commit()
+        conn.close()
+        return redirect("/admin")
+
+    conn.close()
+    return render_template("admin_edit.html", post=post)
+
+
+# ========== DELETE POST ==========
+@app.route("/admin/delete/<int:id>")
+def admin_delete(id):
+    if "admin" not in session:
+        return redirect("/admin/login")
+
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM posts WHERE id=%s", (id,))
+        conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+
+
+# ========== LOGOUT ==========
+@app.route("/admin/logout")
+def admin_logout():
+    session.clear()
+    return redirect("/admin/login")
+
+
 
 # ---------------- Run App ----------------
 if __name__ == "__main__":
